@@ -16,6 +16,8 @@
 @property (nonatomic, assign) CGPoint trayCenterWhenOpen;
 @property (nonatomic, assign) CGPoint trayCenterWhenClose;
 
+@property (nonatomic, assign) BOOL trayOpen;
+
 @end
 
 @implementation ViewController
@@ -32,6 +34,9 @@
     self.trayCenterWhenOpen = self.trayView.center;
     self.trayCenterWhenClose = CGPointMake(self.trayView.center.x,
                                            self.trayView.center.y + frame.size.height - buttonHeight);
+    
+    self.trayView.center = self.trayCenterWhenOpen; // Need to make this happen .vs. layout!
+    self.trayOpen = YES;
 }
 
 
@@ -57,21 +62,36 @@
         
     } else if (sender.state == UIGestureRecognizerStateEnded) {
         NSLog(@"Gesture ended at: %@", NSStringFromCGPoint(location));
-//        if ([sender velocityInView:self.trayView].y > 0) {
-//            self.trayView.center = self.trayCenterWhenClose;
-//        } else {
-//            self.trayView.center = self.trayCenterWhenOpen;
-//        }
- 
-        [UIView animateWithDuration:0.4 animations:^{
+        
+        // + animateWithDuration:delay:usingSpringWithDamping:initialSpringVelocity:options:animations:completion:
+        [UIView animateWithDuration:0.4 delay:0.2 usingSpringWithDamping:0.2 initialSpringVelocity:0.3 options:0.5 animations:^{
             if ([sender velocityInView:self.trayView].y > 0) {
                 self.trayView.center = self.trayCenterWhenClose;
+                self.trayOpen = NO;
             } else {
                 self.trayView.center = self.trayCenterWhenOpen;
-            }
+                self.trayOpen = YES;
+            };
+        } completion:^(BOOL finished) {
+            // Nothing to do here.
         }];
     }
     
+}
+
+// TODO - pull out and use the animation for this too
+// TODO - use the center of the tray to figure out if open/close .vs. saving state.
+- (IBAction)onTrayTapGesture:(UITapGestureRecognizer *)sender {
+    if (sender.state == UIGestureRecognizerStateEnded)
+    {
+        if (self.trayOpen) {
+            self.trayView.center = self.trayCenterWhenClose;
+            self.trayOpen = NO;
+        } else {
+            self.trayView.center = self.trayCenterWhenOpen;
+            self.trayOpen = YES;
+        }
+    }
 }
 
 
